@@ -50,6 +50,7 @@
   [[CCDirector sharedDirector] setProjection:CCDirectorProjection2D];
   
 	CCDirector *director = [CCDirector sharedDirector];
+  [director setDeviceOrientation:kCCDeviceOrientationPortrait];
 	
 	// Init the View Controller
 	viewController = [[RootViewController alloc] initWithNibName:nil bundle:nil];
