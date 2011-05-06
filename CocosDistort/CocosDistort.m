@@ -14,7 +14,7 @@
 // HelloWorldLayer implementation
 @implementation CocosDistort
 
-@synthesize texture2D, grab, spring_count, mass, spring, mousex, mousey, sound, elastic, originalImage, shake, pickerVisible;
+@synthesize texture2D, grab, spring_count, mass, spring, mousex, mousey, sound, elastic, originalImage, shake, isTakeImage;
 
 + (CCScene *)scene {
 	// 'scene' is an autorelease object.
@@ -36,6 +36,8 @@
 	if( (self=[super init])) {
     [[SimpleAudioEngine sharedEngine] preloadEffect:@"touk.wav"];
     self.isAccelerometerEnabled = YES;
+    [[UIDevice currentDevice] beginGeneratingDeviceOrientationNotifications];
+//    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(orientationChanged:) name:@"UIDeviceOrientationDidChangeNotification" object:nil];
     [[UIAccelerometer sharedAccelerometer] setDelegate:self];
     [[UIAccelerometer sharedAccelerometer] setUpdateInterval:1/60];
     shake = NO;
@@ -46,7 +48,7 @@
     [self rubber_init];
     [self scheduleUpdateWithPriority:-1];
     self.isTouchEnabled = YES;
-    pickerVisible = NO;
+    isTakeImage = NO;
 	}
 	return self;
 }
@@ -82,7 +84,7 @@
 }
 
 - (void)orientationChanged {
-  if (pickerVisible == NO) {
+  if (isTakeImage == NO) {
     [[CCDirector sharedDirector] pause];
     [[CCDirector sharedDirector] stopAnimation];
     
@@ -93,8 +95,8 @@
     
     [[CCDirector sharedDirector] resume];
     [[CCDirector sharedDirector] startAnimation];
-    NSLog(@"Orientation change");
   }
+  NSLog(@"Orientation change -> %i", [[UIDevice currentDevice] orientation]);
 }
 
 - (UIImage *)centerScreen:(UIImage *)image {
@@ -102,9 +104,10 @@
   
   CGAffineTransform transform = CGAffineTransformIdentity;
   CGRect bounds = [[[CCDirector sharedDirector] openGLView] frame];//[[UIScreen mainScreen] bounds];
-  
+
+  NSLog(@"%i", [[UIDevice currentDevice] orientation]);
   NSLog(@"bounds -> width:%f height:%f", bounds.size.width, bounds.size.height);
-  
+
   UIGraphicsBeginImageContext(bounds.size);
   CGContextRef context = UIGraphicsGetCurrentContext();
   
@@ -228,7 +231,6 @@
 - (void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex {
   BOOL show = YES;
   AppDelegate *delegate = (AppDelegate*)[[UIApplication sharedApplication] delegate];
-  [[UIDevice currentDevice] beginGeneratingDeviceOrientationNotifications];
   UIImagePickerController *picker = nil;
 	picker = [[UIImagePickerController alloc] init];
   picker.delegate = self;
@@ -264,10 +266,10 @@
   if (show) {
     [delegate.viewController presentModalViewController:picker animated:YES];
     [[[CCDirector sharedDirector] openGLView] addSubview:picker.view];
-    pickerVisible = YES;
   }
   else {
     [picker release];
+    isTakeImage = NO;
     [[CCDirector sharedDirector] resume];
     [[CCDirector sharedDirector] startAnimation];
   }
@@ -291,6 +293,7 @@
   if (actionSheet != nil) {
     actionSheet.actionSheetStyle = UIActionSheetStyleBlackTranslucent;
     [actionSheet showInView:[[CCDirector sharedDirector] openGLView]];
+    isTakeImage = YES;
     [actionSheet release];
   }
 }
@@ -308,7 +311,7 @@
 	[picker dismissModalViewControllerAnimated:YES];
 	[picker.view removeFromSuperview];
   [picker release];
-  pickerVisible = NO;
+  isTakeImage = NO;
   
   [[CCDirector sharedDirector] resume];
   [[CCDirector sharedDirector] startAnimation];
@@ -318,7 +321,7 @@
   [picker dismissModalViewControllerAnimated:YES];
 	[picker.view removeFromSuperview];
   [picker release];
-  pickerVisible = NO;
+  isTakeImage = NO;
   [[CCDirector sharedDirector] resume];
   [[CCDirector sharedDirector] startAnimation];
 }
@@ -365,6 +368,7 @@
 	// in this particular example nothing needs to be released.
 	// cocos2d will automatically release all the children (Label)
   //[self unscheduleSelector:@selector(rubber_dynamics:)];
+  [[NSNotificationCenter defaultCenter] removeObserver:self];
   [originalImage release];
   [[SimpleAudioEngine sharedEngine] unloadEffect:@"elastic.wav"];
   [SimpleAudioEngine end];
