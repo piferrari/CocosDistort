@@ -47,7 +47,7 @@ typedef struct {
   ALuint elastic;
   UIImage *originalImage;
   BOOL shake;
-  BOOL pickerVisible;
+  BOOL isTakeImage;
 }
 
 @property (nonatomic, retain) CCTexture2D *texture2D;
@@ -61,7 +61,7 @@ typedef struct {
 @property (readwrite) ALuint elastic;
 @property (nonatomic, retain) UIImage *originalImage;
 @property (readwrite) BOOL shake;
-@property (readwrite) BOOL pickerVisible;
+@property (readwrite) BOOL isTakeImage;
 
 +(CCScene *) scene;
 - (void)rubber_redraw;
